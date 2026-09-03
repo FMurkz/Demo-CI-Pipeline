@@ -1,8 +1,8 @@
-"""PyQt5 desktop interface for the shopping list."""
+"""PyQt6 desktop interface for the shopping list."""
 
-from PyQt5.QtCore import QPoint, QSize, QTimer, Qt
-from PyQt5.QtGui import QFont, QIcon, QPainter, QPen, QPixmap, QPolygon
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import QPoint, QSize, QTimer, Qt
+from PyQt6.QtGui import QFont, QIcon, QPainter, QPen, QPixmap, QPolygon
+from PyQt6.QtWidgets import (
     QApplication,
     QAbstractSpinBox,
     QCheckBox,
@@ -71,7 +71,7 @@ class ShoppingListWindow(QWidget):
         self.name_input.returnPressed.connect(self.add_current_item)
         self.quantity_input = QSpinBox()
         self.quantity_input.setRange(1, 999)
-        self.quantity_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.quantity_input.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.NoButtons)
         self.quantity_input.setMinimumWidth(58)
         self.add_button = QPushButton("Add item")
         self.add_button.clicked.connect(self.add_current_item)
@@ -100,8 +100,8 @@ class ShoppingListWindow(QWidget):
         items = get_items()
         if not items:
             empty = QListWidgetItem("Your list is clear. Use Add item to get started.")
-            empty.setTextAlignment(Qt.AlignCenter)
-            empty.setForeground(Qt.gray)
+            empty.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            empty.setForeground(Qt.GlobalColor.gray)
             self.list_widget.addItem(empty)
             return
         for item in items:
@@ -118,7 +118,9 @@ class ShoppingListWindow(QWidget):
         checkbox.setChecked(item["bought"])
         checkbox.setToolTip("Mark item as bought")
         checkbox.stateChanged.connect(
-            lambda state: self.set_item_bought(item["id"], state == Qt.Checked)
+            lambda state: self.set_item_bought(
+                item["id"], state == Qt.CheckState.Checked.value
+            )
         )
         row.addWidget(checkbox)
         name = QLabel(f"{item['name']}  x{item['quantity']}")
@@ -144,18 +146,18 @@ class ShoppingListWindow(QWidget):
 
     def _refresh_icon(self, angle):
         pixmap = QPixmap(22, 22)
-        pixmap.fill(Qt.transparent)
+        pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.translate(11, 11)
         painter.rotate(angle)
         painter.translate(-11, -11)
-        pen = QPen(Qt.white, 2)
-        pen.setCapStyle(Qt.RoundCap)
+        pen = QPen(Qt.GlobalColor.white, 2)
+        pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
         painter.drawArc(3, 3, 16, 16, 45 * 16, 285 * 16)
-        painter.setBrush(Qt.white)
-        painter.setPen(Qt.NoPen)
+        painter.setBrush(Qt.GlobalColor.white)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.drawPolygon(QPolygon([QPoint(12, 2), QPoint(19, 3), QPoint(16, 9)]))
         painter.end()
         return QIcon(pixmap)
@@ -191,3 +193,12 @@ class ShoppingListWindow(QWidget):
     def remove_item(self, item_id):
         delete_item(item_id)
         self.refresh_items()
+
+
+if __name__ == "__main__":
+    import sys
+
+    app = QApplication(sys.argv)
+    window = ShoppingListWindow()
+    window.show()
+    sys.exit(app.exec())
