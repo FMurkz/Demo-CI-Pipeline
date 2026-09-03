@@ -14,10 +14,10 @@ elif [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
     docker start $CONTAINER_NAME
 else
     echo "Creating new MySQL container..."
-    docker run --name $CONTAINER_NAME \
-        -e MYSQL_ROOT_PASSWORD=$DB_ROOT_PASSWORD \
-        -e MYSQL_DATABASE=$DB_NAME \
-        -p 3306:3306 \
+    docker run --name demo-mysql \
+        -e MYSQL_ROOT_PASSWORD=root \
+        -e MYSQL_DATABASE=demoapp \
+        -p 127.0.0.1:3306:3306 \
         -d mysql:8
 fi
 
