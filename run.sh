@@ -33,4 +33,4 @@ echo "Applying schema..."
 docker exec -i $CONTAINER_NAME mysql -uroot -p$DB_ROOT_PASSWORD $DB_NAME < schema.sql
 
 echo "Launching app..."
-python3 src/main.py
+PYTHONPATH=. python3 -m src.main
