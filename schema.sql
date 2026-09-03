@@ -1,0 +1,6 @@
+CREATE TABLE items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    quantity INT NOT NULL,
+    bought BOOLEAN DEFAULT FALSE
+);
