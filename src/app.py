@@ -1,7 +1,7 @@
 """Core shopping-list operations, independent from the user interface."""
 
 from mysql.connector import IntegrityError
-from db import get_connection
+from src.db import get_connection
 
 
 def add_item(item):
