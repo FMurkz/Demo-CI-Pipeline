@@ -3,11 +3,12 @@ For the course DD2482, demo showing a CI pipeline
 
 ## Shopping list GUI
 
-Install the Qt5 dependency and launch the desktop application:
 
 ```sh
-python3 -m pip install -r requirements.txt
-PYTHONPATH=src python3 src/main.py
+python3 -m venv .venv  
+# on macOS
+source .venv/bin/activate
+pip install -r requirements.txt
+chmod +x run.sh
+./run.sh
 ```
-
-The list is kept in memory while the application is running. Items can be added with a quantity, marked as done, and deleted.
