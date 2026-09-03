@@ -4,6 +4,8 @@ from PyQt6.QtWidgets import QApplication
 
 from gui import ShoppingListWindow
 
+from db import get_connection
+
 
 def main():
     application = QApplication([])
@@ -13,4 +15,5 @@ def main():
 
 
 if __name__ == "__main__":
+    get_connection()
     raise SystemExit(main())

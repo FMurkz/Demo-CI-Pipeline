@@ -9,5 +9,3 @@ def get_connection():
         password=os.getenv("DB_PASSWORD", "root"),
         database=os.getenv("DB_NAME", "demoapp"),
     )
-
-print(get_connection())
