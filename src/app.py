@@ -12,7 +12,7 @@ def _run(query, params=(), fetchone=False, fetchall=False, commit=False):
         if commit:
             conn.commit()
         if fetchone:
-            return cursor.fetchone(), cursor
+            return cursor.fetchone()
         if fetchall:
             return cursor.fetchall()
         return cursor
@@ -51,7 +51,7 @@ def mark_item_as_bought(item_id, bought=True):
     """Set an item's bought state and return it, or None if it does not exist."""
     #BUG: the parameters for the SQL query are in the wrong order
     _run("UPDATE items SET bought = %s WHERE id = %s", (item_id, bought), commit=True)
-    item, _ = _run(
+    item = _run(
         "SELECT id, name, quantity, bought FROM items WHERE id = %s",
         (item_id,),
         fetchone=True,
