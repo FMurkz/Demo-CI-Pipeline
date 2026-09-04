@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from app import add_item, delete_item, get_items, mark_item_as_bought
+from src.app import add_item, delete_item, get_items, mark_item_as_bought
 
 
 class ShoppingListWindow(QWidget):

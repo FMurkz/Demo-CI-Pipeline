@@ -1,14 +1,29 @@
 """Core shopping-list operations, independent from the user interface."""
 
-from mysql.connector import IntegrityError
 from src.db import get_connection
+
+
+def _run(query, params=(), fetchone=False, fetchall=False, commit=False):
+    """Execute a query and optionally fetch/commit, always closing the connection."""
+    conn = get_connection()
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, params)
+        if commit:
+            conn.commit()
+        if fetchone:
+            return cursor.fetchone(), cursor
+        if fetchall:
+            return cursor.fetchall()
+        return cursor
+    finally:
+        conn.close()
 
 
 def add_item(item):
     """Add an item and return it. Accepts a name or a name/quantity mapping."""
     if isinstance(item, str):
-        name = item.strip()
-        quantity = 1
+        name, quantity = item.strip(), 1
     else:
         name = str(item.get("name", "")).strip()
         quantity = int(item.get("quantity", 1))
@@ -16,59 +31,35 @@ def add_item(item):
     if quantity < 1:
         raise ValueError("Quantity must be at least 1")
 
-    conn = get_connection()
-    try:
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute(
-                "INSERT INTO items (name, quantity, bought) VALUES (%s, %s, %s)",
-                (name, quantity, False),
-            )
-            conn.commit()
-        except IntegrityError:
-            raise ValueError("Item already exists")
+    if any(existing["name"] == name for existing in get_items()):
+        raise ValueError("Item already exists")
 
-        new_id = cursor.lastrowid
-        return {"id": new_id, "name": name, "quantity": quantity, "bought": False}
-    finally:
-        conn.close()
+    cursor = _run(
+        "INSERT INTO items (name, quantity, bought) VALUES (%s, %s, %s)",
+        (name, quantity, False),
+        commit=True,
+    )
+    return {"id": cursor.lastrowid, "name": name, "quantity": quantity, "bought": False}
 
 
 def get_items():
     """Return a copy of the current shopping list."""
-    conn = get_connection()
-    try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, name, quantity, bought FROM items")
-        return cursor.fetchall()
-    finally:
-        conn.close()
+    return _run("SELECT id, name, quantity, bought FROM items", fetchall=True)
 
 
 def mark_item_as_bought(item_id, bought=True):
     """Set an item's bought state and return it, or None if it does not exist."""
-    conn = get_connection()
-    try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(
-            "UPDATE items SET bought = %s WHERE id = %s", (bought, item_id)
-        )
-        conn.commit()
-
-        cursor.execute(
-            "SELECT id, name, quantity, bought FROM items WHERE id = %s", (item_id,)
-        )
-        return cursor.fetchone()
-    finally:
-        conn.close()
+    #BUG: the parameters for the SQL query are in the wrong order
+    _run("UPDATE items SET bought = %s WHERE id = %s", (item_id, bought), commit=True)
+    item, _ = _run(
+        "SELECT id, name, quantity, bought FROM items WHERE id = %s",
+        (item_id,),
+        fetchone=True,
+    )
+    return item
 
 
 def delete_item(item_id):
-    conn = get_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM items WHERE id = %s", (item_id,))
-        conn.commit()
-        return cursor.rowcount > 0
-    finally:
-        conn.close()
+    """Delete an item by id. Returns True if a row was deleted."""
+    cursor = _run("DELETE FROM items WHERE id = %s", (item_id,), commit=True)
+    return cursor.rowcount > 0

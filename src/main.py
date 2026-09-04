@@ -1,10 +1,16 @@
 """Launch the shopping-list desktop application."""
 
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from PyQt6.QtWidgets import QApplication
 
-from gui import ShoppingListWindow
-
-from db import get_connection
+from src.db import get_connection
+from src.gui import ShoppingListWindow
 
 
 def main():
