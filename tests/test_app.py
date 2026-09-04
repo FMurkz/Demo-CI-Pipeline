@@ -3,7 +3,19 @@ from unittest.mock import MagicMock, patch
 from mysql.connector import IntegrityError
 import pytest
 
-from src.app import add_item, delete_item, get_items, mark_item_as_bought
+from src.app import add_item, delete_item, get_items, mark_item_as_bought, get_connection
+
+@pytest.fixture(autouse=True)
+def clean_table():
+    yield
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("TRUNCATE TABLE items")
+        conn.commit()
+    finally:
+        conn.close()
+
 @patch("src.app.get_connection")
 def test_add_item_returns_new_record(mock_get_connection):
     conn = MagicMock()
@@ -48,6 +60,7 @@ def test_mark_item_as_unbought(mock_get_connection):
     cursor = conn.cursor.return_value
     cursor.lastrowid = 1
     cursor.fetchone.side_effect = [
+        None,
         {"id": 1, "name": "Item", "quantity": 1, "bought": True},
         {"id": 1, "name": "Item", "quantity": 1, "bought": False},
     ]
@@ -107,31 +120,34 @@ def test_delete_item_returns_false_for_nonexistent_item(mock_get_connection):
 
 
 @patch("src.app.get_connection")
-@patch("src.app.get_items")
-def test_add_item_allows_case_variants_as_separate_items(mock_get_items, mock_get_connection):
-    """Intended behavior: no duplicates allowed"""
-    conn = MagicMock()
-    cursor = conn.cursor.return_value
-    mock_get_connection.return_value = conn
-
-    mock_get_items.return_value = [
-        {"id": 1, "name": "milk", "quantity": 1, "bought": False}
+def test_adding_same_item_different_case_is_rejected(mock_get_connection):
+    cursor = MagicMock()
+    cursor.lastrowid = 1
+    cursor.fetchone.side_effect = [
+        None,                          # "milk": nothing on the list yet
+        {"id": 1, "name": "milk"},     # "Milk": matches, names are case-insensitive
     ]
-    cursor.lastrowid = 2
+    mock_get_connection.return_value.cursor.return_value = cursor
+    add_item("milk")
     with pytest.raises(ValueError):
-        add_item("milk")
+        add_item("Milk")
     
 @pytest.mark.integration
-def test_case_duplicate_rejected():
-    add_item("Milk")
+def test_adding_same_item_different_case_is_rejected_integration():
+    add_item("milk")
+
     with pytest.raises(ValueError):
-        add_item("milk")
+        add_item("Milk")
+
+    names = sorted(item["name"] for item in get_items())
+    assert names == ["milk"], f"expected one row, got {names}"
 
 @pytest.mark.integration
-def test_mark_item_as_bought():
+def test_mark_item_as_bought_integration():
+    add_item("Flour")
+    add_item("Milk")
     added = add_item("Eggs")
     result = mark_item_as_bought(added["id"], bought=True)
-
     assert result["bought"] in (True, 1)
     
 

@@ -31,7 +31,13 @@ def add_item(item):
     if quantity < 1:
         raise ValueError("Quantity must be at least 1")
 
-    if any(existing["name"] == name for existing in get_items()):
+    # BUG
+    existing = _run(
+        "SELECT id, name, quantity FROM items WHERE name = %s", #BUG: to fix, add, COLLATE utf8mb4_0900_ai_ci to make case insensitive
+        (name,),
+        fetchone=True,
+    )
+    if existing:
         raise ValueError("Item already exists")
 
     cursor = _run(
@@ -49,7 +55,7 @@ def get_items():
 
 def mark_item_as_bought(item_id, bought=True):
     """Set an item's bought state and return it, or None if it does not exist."""
-    #BUG: the parameters for the SQL query are in the wrong order
+    #BUG: the parameters for the SQL query are in the wrong order, to fix: (bought, item_id)
     _run("UPDATE items SET bought = %s WHERE id = %s", (item_id, bought), commit=True)
     item = _run(
         "SELECT id, name, quantity, bought FROM items WHERE id = %s",
