@@ -5,7 +5,7 @@ import pytest
 
 from src.app import add_item, delete_item, get_items, mark_item_as_bought, get_connection
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def clean_table():
     yield
     conn = get_connection()
