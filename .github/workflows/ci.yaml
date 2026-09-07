@@ -45,4 +45,4 @@ jobs:
           for i in {1..30}; do mysql -h 127.0.0.1 -uroot -proot -e 'SELECT 1' && break || sleep 2; done
           mysql -h 127.0.0.1 -uroot -proot demoapp < schema.sql
 
-      - run: pytest -q
+      - run: python -m pytest -m ""
