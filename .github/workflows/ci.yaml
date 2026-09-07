@@ -22,9 +22,10 @@ jobs:
           python-version: "3.13"
           cache: 'pip'
       - run: pip install -r requirements.txt
-      - run: python -m pytest -m "not integration"
+      - run: python -m pytest tests/test_app.py -q  
 
   integration-tests:
+    needs: unit-tests
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -50,4 +51,4 @@ jobs:
         run: |
           for i in {1..30}; do mysql -h 127.0.0.1 -uroot -proot -e 'SELECT 1' && break || sleep 2; done
           mysql -h 127.0.0.1 -uroot -proot demoapp < schema.sql
-      - run: python -m pytest -m integration -q -o addopts=""
+      - run: python -m pytest tests/test_app_integration.py -q
