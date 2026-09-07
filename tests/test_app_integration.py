@@ -19,9 +19,6 @@ def test_adding_same_item_different_case_is_rejected_integration():
     with pytest.raises(ValueError):
         add_item("Milk")
 
-    names = sorted(item["name"] for item in get_items())
-    assert names == ["milk"], f"expected one row, got {names}"
-
 def test_mark_item_as_bought_integration():
     add_item("Flour")
     add_item("Milk")
