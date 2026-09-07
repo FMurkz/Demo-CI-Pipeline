@@ -3,12 +3,14 @@ from unittest.mock import MagicMock, patch
 from mysql.connector import IntegrityError
 import pytest
 
-from src.app import add_item, delete_item, get_items, mark_item_as_bought, get_connection
+from src.app import add_item, delete_item, get_items, mark_item_as_bought
 
 @pytest.fixture(autouse=True)
 def clean_table():
     yield
-    conn = get_connection()
+    from importlib import import_module
+    app = import_module("src.app")
+    conn = app.get_connection()
     try:
         cursor = conn.cursor()
         cursor.execute("TRUNCATE TABLE items")
