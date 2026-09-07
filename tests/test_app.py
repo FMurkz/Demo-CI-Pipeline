@@ -3,18 +3,7 @@ from unittest.mock import MagicMock, patch
 from mysql.connector import IntegrityError
 import pytest
 
-from src.app import add_item, delete_item, get_items, mark_item_as_bought, get_connection
-
-@pytest.fixture
-def clean_table():
-    yield
-    conn = get_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("TRUNCATE TABLE items")
-        conn.commit()
-    finally:
-        conn.close()
+from src.app import add_item, delete_item, get_items, mark_item_as_bought
 
 @patch("src.app.get_connection")
 def test_add_item_returns_new_record(mock_get_connection):
@@ -124,8 +113,8 @@ def test_adding_same_item_different_case_is_rejected(mock_get_connection):
     cursor = MagicMock()
     cursor.lastrowid = 1
     cursor.fetchone.side_effect = [
-        None,                          # "milk": nothing on the list yet
-        {"id": 1, "name": "milk"},     # "Milk": matches, names are case-insensitive
+        None,                          
+        {"id": 1, "name": "milk"},     
     ]
     mock_get_connection.return_value.cursor.return_value = cursor
     add_item("milk")

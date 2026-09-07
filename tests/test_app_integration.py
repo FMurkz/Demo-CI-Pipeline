@@ -1,11 +1,8 @@
-from unittest.mock import MagicMock, patch
-
-from mysql.connector import IntegrityError
 import pytest
 
 from src.app import add_item, delete_item, get_items, mark_item_as_bought, get_connection
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clean_table():
     yield
     conn = get_connection()
@@ -16,7 +13,7 @@ def clean_table():
     finally:
         conn.close()
 
-def test_adding_same_item_different_case_is_rejected_integration(clean_table):
+def test_adding_same_item_different_case_is_rejected_integration():
     add_item("milk")
 
     with pytest.raises(ValueError):
@@ -25,7 +22,7 @@ def test_adding_same_item_different_case_is_rejected_integration(clean_table):
     names = sorted(item["name"] for item in get_items())
     assert names == ["milk"], f"expected one row, got {names}"
 
-def test_mark_item_as_bought_integration(clean_table):
+def test_mark_item_as_bought_integration():
     add_item("Flour")
     add_item("Milk")
     added = add_item("Eggs")
