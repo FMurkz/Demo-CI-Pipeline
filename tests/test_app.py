@@ -33,17 +33,6 @@ def test_mark_item_as_bought(mock_get_connection):
     conn.close.assert_called_once()
 
 @patch("src.app.get_connection")
-def test_mark_item_as_bought(mock_get_connection):
-    conn = MagicMock()
-    mock_get_connection.return_value = conn
-    cursor = conn.cursor.return_value
-    cursor.fetchone.return_value = {"id": 5, "bought": True} 
-
-    result = mark_item_as_bought(5, bought=True)
-
-    assert result["bought"] is True
-
-@patch("src.app.get_connection")
 def test_mark_item_as_unbought(mock_get_connection):
     conn = MagicMock()
     cursor = conn.cursor.return_value
@@ -106,6 +95,17 @@ def test_delete_item_returns_false_for_nonexistent_item(mock_get_connection):
 
     result = delete_item(999)
     assert result is False
+
+@patch("src.app.get_connection")
+def test_mark_item_as_bought(mock_get_connection):
+    conn = MagicMock()
+    mock_get_connection.return_value = conn
+    cursor = conn.cursor.return_value
+    cursor.fetchone.return_value = {"id": 5, "bought": True} 
+
+    result = mark_item_as_bought(5, bought=True)
+
+    assert result["bought"] is True
 
 
 @patch("src.app.get_connection")
