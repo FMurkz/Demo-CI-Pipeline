@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  DB_HOST: 127.0.0.1
+  DB_PORT: 3306
+  DB_USER: root
+  DB_PASSWORD: root
+  DB_NAME: demoapp
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10, 3.11, 3.12]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: demoapp
+        options: >-
+          --health-cmd='mysqladmin ping --silent'
+          --health-interval=5s
+          --health-timeout=10s
+          --health-retries=10
+        ports:
+          - 3306:3306
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - run: pip install -r requirements.txt
+
+      - name: Wait for MySQL & load schema
+        run: |
+          for i in {1..30}; do mysql -h 127.0.0.1 -uroot -proot -e 'SELECT 1' && break || sleep 2; done
+          mysql -h 127.0.0.1 -uroot -proot demoapp < schema.sql
+
+      - run: pytest -q
