@@ -2,8 +2,8 @@ name: CI
 
 on:
   push:
-  pull_request:
     branches: [ main, master ]
+  pull_request:
 
 env:
   DB_HOST: 127.0.0.1
@@ -13,7 +13,18 @@ env:
   DB_NAME: demoapp
 
 jobs:
-  test:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -m "not integration"
+
+  integration-tests:
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -28,20 +39,15 @@ jobs:
           --health-retries=10
         ports:
           - 3306:3306
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v4
         with:
           python-version: "3.13"
           cache: 'pip'
-
       - run: pip install -r requirements.txt
-
       - name: Wait for MySQL & load schema
         run: |
           for i in {1..30}; do mysql -h 127.0.0.1 -uroot -proot -e 'SELECT 1' && break || sleep 2; done
           mysql -h 127.0.0.1 -uroot -proot demoapp < schema.sql
-
-      - run: python -m pytest -m ""
+      - run: python -m pytest -m integration -q -o addopts=""
